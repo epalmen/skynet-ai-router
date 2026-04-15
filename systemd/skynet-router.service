@@ -1,0 +1,17 @@
+[Unit]
+Description=Skynet AI Router
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=erikp
+WorkingDirectory=/mnt/workspace/claude/AiRouter
+EnvironmentFile=/mnt/workspace/claude/AiRouter/.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 3000
+Restart=always
+RestartSec=5
+Environment=PATH=/home/erikp/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target
