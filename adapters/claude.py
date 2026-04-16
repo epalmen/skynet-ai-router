@@ -1,8 +1,11 @@
 import asyncio
 import json
+import shutil
 from typing import AsyncGenerator
 
 from config import CLAUDE_MODEL
+
+CLAUDE_BIN = shutil.which("claude") or "/home/erikp/.local/bin/claude"
 
 
 async def chat(messages: list[dict], system: str | None = None, model: str = CLAUDE_MODEL) -> str:
@@ -15,7 +18,7 @@ async def chat(messages: list[dict], system: str | None = None, model: str = CLA
     prompt = _messages_to_prompt(messages)
 
     args = [
-        "claude",
+        CLAUDE_BIN,
         "-p", prompt,
         "--output-format", "json",
         "--model", model,
@@ -52,7 +55,7 @@ async def stream(messages: list[dict], system: str | None = None, model: str = C
     prompt = _messages_to_prompt(messages)
 
     args = [
-        "claude",
+        CLAUDE_BIN,
         "-p", prompt,
         "--output-format", "stream-json",
         "--model", model,
