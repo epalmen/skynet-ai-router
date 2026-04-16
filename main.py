@@ -40,6 +40,7 @@ class ChatRequest(BaseModel):
     backend: Optional[Backend] = None   # None → use DEFAULT_BACKEND
     model: Optional[str] = None         # override model for chosen backend
     stream: bool = False
+    image_path: Optional[str] = None    # local file path to attach to the request
 
 
 class ChatResponse(BaseModel):
@@ -87,7 +88,7 @@ async def chat(req: ChatRequest):
 
     try:
         if backend == Backend.CLAUDE:
-            result = await claude.chat(msgs, model=model)
+            result = await claude.chat(msgs, model=model, image_path=req.image_path)
         else:
             result = await ollama.chat(msgs, model=model)
     except Exception as e:
@@ -105,7 +106,7 @@ async def chat_stream(req: ChatRequest):
     async def generate():
         try:
             if backend == Backend.CLAUDE:
-                async for chunk in claude.stream(msgs, model=model):
+                async for chunk in claude.stream(msgs, model=model, image_path=req.image_path):
                     yield chunk
             else:
                 async for chunk in ollama.stream(msgs, model=model):

@@ -8,11 +8,11 @@ from config import CLAUDE_MODEL
 CLAUDE_BIN = shutil.which("claude") or "/home/erikp/.local/bin/claude"
 
 
-async def chat(messages: list[dict], system: str | None = None, model: str = CLAUDE_MODEL) -> str:
+async def chat(messages: list[dict], system: str | None = None, model: str = CLAUDE_MODEL, image_path: str | None = None) -> str:
     """
     Send a conversation to Claude via the Claude Code CLI subprocess.
     Uses the existing `claude auth login` session — no API key needed.
-    Accepts OpenAI-style messages list.
+    Accepts OpenAI-style messages list. Optionally attaches a local image file.
     """
     # Build prompt from messages (collapse to single string for -p flag)
     prompt = _messages_to_prompt(messages)
@@ -25,6 +25,8 @@ async def chat(messages: list[dict], system: str | None = None, model: str = CLA
     ]
     if system:
         args += ["--system", system]
+    if image_path:
+        args += ["--image", image_path]
 
     proc = await asyncio.create_subprocess_exec(
         *args,
@@ -48,7 +50,7 @@ async def chat(messages: list[dict], system: str | None = None, model: str = CLA
     return stdout.decode().strip()
 
 
-async def stream(messages: list[dict], system: str | None = None, model: str = CLAUDE_MODEL) -> AsyncGenerator[str, None]:
+async def stream(messages: list[dict], system: str | None = None, model: str = CLAUDE_MODEL, image_path: str | None = None) -> AsyncGenerator[str, None]:
     """
     Streaming version — yields text chunks as Claude produces them.
     """
@@ -62,6 +64,8 @@ async def stream(messages: list[dict], system: str | None = None, model: str = C
     ]
     if system:
         args += ["--system", system]
+    if image_path:
+        args += ["--image", image_path]
 
     proc = await asyncio.create_subprocess_exec(
         *args,
