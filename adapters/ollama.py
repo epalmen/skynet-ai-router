@@ -12,7 +12,7 @@ async def chat(messages: list[dict], system: str | None = None, model: str = OLL
     """
     full_messages = _build_messages(messages, system)
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         response = await client.post(
             f"{base_url}/api/chat",
             json={"model": model, "messages": full_messages, "stream": False},
