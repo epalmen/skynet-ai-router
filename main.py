@@ -17,7 +17,7 @@ from typing import Optional
 import time
 
 from adapters import claude, ollama
-from config import Backend, DEFAULT_BACKEND, OLLAMA_MODEL, CLAUDE_MODEL, ROUTER_HOST, ROUTER_PORT
+from config import Backend, DEFAULT_BACKEND, OLLAMA_MODEL, CLAUDE_MODEL, REMOTE_LLM_BASE, REMOTE_LLM_MODEL, ROUTER_HOST, ROUTER_PORT
 
 app = FastAPI(
     title="Skynet AI Router",
@@ -69,7 +69,11 @@ def _resolve_backend(requested: Optional[Backend]) -> Backend:
 def _resolve_model(backend: Backend, override: Optional[str]) -> str:
     if override:
         return override
-    return CLAUDE_MODEL if backend == Backend.CLAUDE else OLLAMA_MODEL
+    if backend == Backend.CLAUDE:
+        return CLAUDE_MODEL
+    if backend == Backend.REMOTE:
+        return REMOTE_LLM_MODEL
+    return OLLAMA_MODEL
 
 
 def _messages_as_dicts(messages: list[Message]) -> list[dict]:
@@ -89,6 +93,8 @@ async def chat(req: ChatRequest):
     try:
         if backend == Backend.CLAUDE:
             result = await claude.chat(msgs, model=model, image_path=req.image_path)
+        elif backend == Backend.REMOTE:
+            result = await ollama.chat(msgs, model=model, base_url=REMOTE_LLM_BASE)
         else:
             result = await ollama.chat(msgs, model=model)
     except Exception as e:
@@ -107,6 +113,9 @@ async def chat_stream(req: ChatRequest):
         try:
             if backend == Backend.CLAUDE:
                 async for chunk in claude.stream(msgs, model=model, image_path=req.image_path):
+                    yield chunk
+            elif backend == Backend.REMOTE:
+                async for chunk in ollama.stream(msgs, model=model, base_url=REMOTE_LLM_BASE):
                     yield chunk
             else:
                 async for chunk in ollama.stream(msgs, model=model):

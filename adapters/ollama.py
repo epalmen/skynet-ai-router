@@ -6,7 +6,7 @@ import httpx
 from config import OLLAMA_BASE, OLLAMA_MODEL
 
 
-async def chat(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL) -> str:
+async def chat(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL, base_url: str = OLLAMA_BASE) -> str:
     """
     Send a conversation to Ollama. Accepts OpenAI-style messages list.
     """
@@ -14,14 +14,14 @@ async def chat(messages: list[dict], system: str | None = None, model: str = OLL
 
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{OLLAMA_BASE}/api/chat",
+            f"{base_url}/api/chat",
             json={"model": model, "messages": full_messages, "stream": False},
         )
         response.raise_for_status()
         return response.json()["message"]["content"]
 
 
-async def stream(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL) -> AsyncGenerator[str, None]:
+async def stream(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL, base_url: str = OLLAMA_BASE) -> AsyncGenerator[str, None]:
     """
     Streaming version for Ollama.
     """
@@ -30,7 +30,7 @@ async def stream(messages: list[dict], system: str | None = None, model: str = O
     async with httpx.AsyncClient(timeout=120) as client:
         async with client.stream(
             "POST",
-            f"{OLLAMA_BASE}/api/chat",
+            f"{base_url}/api/chat",
             json={"model": model, "messages": full_messages, "stream": True},
         ) as response:
             async for line in response.aiter_lines():
