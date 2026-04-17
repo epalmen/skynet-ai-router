@@ -1,9 +1,15 @@
 import json
+import re
 from typing import AsyncGenerator
 
 import httpx
 
 from config import OLLAMA_BASE, OLLAMA_MODEL
+
+
+def _strip_thinking(text: str) -> str:
+    """Remove <think>...</think> blocks from model output."""
+    return re.sub(r"<think>.*?</think>\s*", "", text, flags=re.DOTALL).strip()
 
 
 async def chat(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL, base_url: str = OLLAMA_BASE) -> str:
@@ -18,7 +24,7 @@ async def chat(messages: list[dict], system: str | None = None, model: str = OLL
             json={"model": model, "messages": full_messages, "stream": False},
         )
         response.raise_for_status()
-        return response.json()["message"]["content"]
+        return _strip_thinking(response.json()["message"]["content"])
 
 
 async def stream(messages: list[dict], system: str | None = None, model: str = OLLAMA_MODEL, base_url: str = OLLAMA_BASE) -> AsyncGenerator[str, None]:
